@@ -3,12 +3,13 @@ import {debounce} from 'lodash'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 var stack=[]
+var score = 0
 export function Home() {
   const [line1, setLine1] = useState(['q', 'w', 'e','r','t','y','u','i','o','p']);
   const [line2, setLine2] = useState(['a','s','d','f','g','h','j','k','l']);
   const [line3, setLine3] = useState(['z','x','c','v','b','n','M']);
 
-  const [score, setScore] = useState(0)
+  
   const [multiplier, setMultiplier] = useState(0)
   const [word, setWord] = useState('')
   const [saved, setSaved] = useState('')
@@ -22,15 +23,15 @@ export function Home() {
   const [feedback, setFeedback] = useState('')
  
   var arr=[]
-
+  var updatedstack=''
   async function submit(obj)
   {
     if(obj!=='')
     {
     stack.push(obj)
+    console.log(stack)
     setWord('')
-
-    if(stack.length>=2)
+    if(stack.length>=3)
     {
       for(let i=0;i<stack.length;i++)
       {
@@ -39,7 +40,7 @@ export function Home() {
           await axios.get('https://api.dictionaryapi.dev/api/v2/entries/en/'+stack[i].split(' ').join(""))
           .then(res=>{
             console.log(res)
-            setScore(score+10)
+            score = score+10
             setMultiplier(multiplier+1)
             stack = stack.filter((s) => s!=stack[i])
           })
@@ -97,7 +98,6 @@ export function Home() {
           {line1.map((character,index) => (
             <button key={index} className='custom' onClick={()=>{setWord(word+' '+character)}}>{character}</button>
           ))}
-          {/* <input onChange={(e)=>saving(e.target.value)} /> */}
           <br /> 
           {line2.map((character,index) => (
             <button key={index} className='custom' onClick={()=>{setWord(word+' '+character)}}>{character}</button>
@@ -118,8 +118,6 @@ export function Home() {
       )}
       
       </div>
-
-
       
     </div>
   );
