@@ -1,16 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {debounce} from 'lodash'
 import { Link } from "react-router-dom";
 import axios from 'axios'
 var stack=[]
 var score = 0
+var multiplier = 0
+var arr=[]
 export function Home() {
   const [line1, setLine1] = useState(['q', 'w', 'e','r','t','y','u','i','o','p']);
   const [line2, setLine2] = useState(['a','s','d','f','g','h','j','k','l']);
   const [line3, setLine3] = useState(['z','x','c','v','b','n','M']);
 
-  
-  const [multiplier, setMultiplier] = useState(0)
+  const [apiCondition, setApiCondition] = useState(false)
+  const [mainscore, setMainscore] = useState([])
+  const [mainlevel, setMainlevel] = useState([])
+  const [mainid, setMainid] = useState('')
+  const [times, setTimes] = useState(0)
+
   const [word, setWord] = useState('')
   const [saved, setSaved] = useState('')
   const [backgroundColor, setBackgroundColor] = useState('rgb(232, 231, 231)')
@@ -22,14 +28,35 @@ export function Home() {
   const [name, setName] = useState('')
   const [feedback, setFeedback] = useState('')
  
-  var arr=[]
+  
   var updatedstack=''
+
+  useEffect(()=>{
+    axios.get('https://particle-ae921-default-rtdb.firebaseio.com/datas.json')
+    .then(res=>{
+      let result = res.data
+      for(let i in result)
+      { 
+        //console.log((result[i].name) ) 
+        if((result[i].name).toLowerCase() === name.toLowerCase() )
+        { 
+          setApiCondition(true)
+          setMainid('/'+i)
+          setTimes(result[i].times)
+          setMainscore(result[i].score)
+          setMainlevel(result[i].level)
+        }
+      }
+    })
+    .catch(err=>console.log(err))
+  },[name])
+
+
   async function submit(obj)
   {
     if(obj!=='')
     {
     stack.push(obj)
-    console.log(stack)
     setWord('')
     if(stack.length>=3)
     {
@@ -39,13 +66,13 @@ export function Home() {
         {
           await axios.get('https://api.dictionaryapi.dev/api/v2/entries/en/'+stack[i].split(' ').join(""))
           .then(res=>{
-            console.log(res)
+            //console.log(res)
             score = score+10
-            setMultiplier(multiplier+1)
+            multiplier = multiplier+1
             stack = stack.filter((s) => s!=stack[i])
           })
           .catch(err=>{
-            setMultiplier(0)
+            multiplier = 0
             arr.push(stack[i])
           })
         }
@@ -53,18 +80,45 @@ export function Home() {
       
       if(stack.length==3)
       {
-        await axios.post('https://particle-ae921-default-rtdb.firebaseio.com/datas.json',{
-          name:name,
-          score:score,
-          level:multiplier
-        })
-        setIntro(false)
-        setGame(false)
-        setExtro(true)
+        if(apiCondition)
+        {
+          await axios.put('https://particle-ae921-default-rtdb.firebaseio.com/datas'+mainid+'.json',{
+            times:times+1,
+            name:name,
+            score:[...mainscore,score],
+            level:[...mainlevel,multiplier]
+          })
+          setIntro(false)
+          setGame(false)
+          setExtro(true)
+          setWord('')
+          setApiCondition(false)
+          stack=[]
+          score=0
+          multiplier = 0
+        }else{
+          await axios.post('https://particle-ae921-default-rtdb.firebaseio.com/datas'+mainid+'.json',{
+            times:times+1,
+            name:name,
+            score:[...mainscore,score],
+            level:[...mainlevel,multiplier]
+          })
+          setIntro(false)
+          setGame(false)
+          setExtro(true)
+          setWord('')
+          stack=[]
+          score=0
+          multiplier = 0
+        }
       }
     }
   }else{
+    
     setFeedback('Please Enter Valid Input')
+    setTimeout(function(){
+      setFeedback('')  
+    },800)  
   }
   }
 

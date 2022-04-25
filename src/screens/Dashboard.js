@@ -17,31 +17,48 @@ export default function Dashboard() {
           }
           result.sort((a,b)=> b.score - a.score)
           setDatas(result)
-          //console.log(result)
         })
       .catch((err) => console.log(err));
   }, []);
 
+
+  function average(ar)
+  { 
+    const reducer = (accumulator, currentValue) => accumulator + currentValue;
+    let numCount = ar.length;
+    let sum = ar.reduce(reducer);
+    
+    return parseInt(sum / numCount);
+  }
+
+  function max(score)
+  {
+    let updated = (score.sort((a,b) => (b - a)))[0]
+    return updated
+  }
+
   return (
     <div>
-      <h2 style={{ textAlign: "center" }}> Dashboard </h2>
+      <h2 style={{ textAlign: "center" }}> LeaderBoard Dashboard </h2>
       <table style={{ width: "50%", margin: "auto" }}>
         <thead>
           <tr>
             <th>Name</th>
-            <th>Score</th>
-            <th>Level</th>
+            <th>No. of Games Played</th>
+            <th>Average Score</th>
+            <th>Max Score</th>
+            <th>Max Level</th>
           </tr>
         </thead>
         {
            datas && datas.map((r,index)=>(
                 <tbody key={index} >
                 <tr>
-                  <td>{r.name}</td>
-               
-                  <td>{r.score}</td>
-               
-                  <td>{r.level}</td>
+                  <td>{r.name.toUpperCase()}</td>
+                  <td>{r.times}</td>
+                  <td>{average(r.score)}</td>
+                  <td>{max(r.score)}</td>
+                  <td>{max(r.level)}</td>
                 </tr>
               </tbody>
             ) )
